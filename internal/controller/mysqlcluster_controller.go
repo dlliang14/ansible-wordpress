@@ -88,7 +88,7 @@ func (r *MysqlClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	}
 
-	// 启用协程定期记录当前主库GTID快照，用于选举依据
+	// 启用协程定期记录当前主库的GTID快照，用于选举依据
 	if !r.SnapGoIsEnabled {
 		r.startAndUpdateGTIDSnapshot(ctx, cluster)
 		r.SnapGoIsEnabled = true
