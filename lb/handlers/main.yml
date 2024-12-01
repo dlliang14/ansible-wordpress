@@ -1,0 +1,6 @@
+---
+# handlers file for lb
+- name: restart_nginx
+  systemd:
+    name: nginx
+    state: restarted

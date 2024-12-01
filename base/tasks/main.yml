@@ -1,0 +1,51 @@
+---
+# tasks file for base
+- name: Stop Selinux
+  selinux:
+    state: disabled
+
+- name: Stop Firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+
+- name: Create www Group
+  group:
+    name: www
+    gid: 1666
+    state: present
+
+- name: Create www User
+  user:
+    name: www
+    uid: 1666
+    group: www
+    shell: /sbin/nologin
+    create_home: false
+    state: present
+
+- name: 获取当前日期
+  command: date +%Y%m%d
+  register: current_date
+
+- name: 创建备份目录
+  file:
+    path: "/tmp/backup_{{ current_date.stdout }}"
+    state: directory
+
+- name: 备份现有的 YUM 源配置文件
+  shell: mv /etc/yum.repos.d/* /tmp/backup_{{ current_date.stdout }}/
+  args:
+    creates: "/tmp/backup_{{ current_date.stdout }}/"
+
+- name: 下载阿里云的 YUM 源配置
+  command: curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+
+- name: 下载阿里云的 YUM epel 源配置
+  command: curl -o /etc/yum.repos.d/epel.repo https://mirrors.aliyun.com/repo/epel-7.repo
+
+- name: 清除 YUM 缓存
+  command: yum clean all
+
+# - name: 生成本地 YUM 缓存
+#   command: yum makecache

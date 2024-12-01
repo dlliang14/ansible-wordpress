@@ -1,0 +1,22 @@
+[lb]
+lb1 ansible_host=10.0.0.12
+
+[nfs_server]
+nfs1 ansible_host=10.0.0.13
+
+[web_group]
+web1 ansible_host=10.0.0.14
+web2 ansible_host=10.0.0.15
+
+[db_server]
+db1 ansible_host=10.0.0.16
+
+[www:children]
+lb
+nfs_server
+web_group
+db_server
+
+[nginx:children]
+lb
+web_group

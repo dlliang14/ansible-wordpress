@@ -1,0 +1,83 @@
+---
+# tasks file for web
+- name: Gather OS version
+  command: cat /etc/redhat-release
+  register: os_version
+ 
+- name: Extract major version from OS version
+  set_fact:
+    os_major_version: "{{ os_version.stdout.split()[3] | regex_replace('\\..*$', '') }}"
+- name: Extract minor version from OS version
+  set_fact:
+    os_minor_version: "{{ os_version.stdout.split()[3] | regex_replace('^[^.]*\\.', '') }}"
+ 
+- name: Install rpm package for CentOS 7.9
+  yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: latest
+  when: os_major_version == '7' and os_minor_version == '9.2009'
+ 
+- name: Install rpm package for CentOS 9.3
+  yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-9.3.rpm
+    state: latest
+  when: os_major_version == '9' and os_minor_version == '3'
+ 
+- name: Install php-fpm
+  yum:
+    name: 
+      - 'php74-php-pdo'
+      - 'php74-php-mbstring'
+      - 'php74-php-cli'
+      - 'php74-php-fpm'
+      - 'php74-php-mysqlnd'
+    state: latest
+ 
+- name: Config php-fpm
+  copy:
+    src: www.conf
+    dest: /etc/opt/remi/php74/php-fpm.d/www.conf
+  notify: restart_php
+ 
+- name: Start php-fpm
+  systemd:
+    name: php74-php-fpm
+    state: restarted
+    enabled: true
+ 
+#2、安装nginx，配置nginx代理php-fpm
+- name: copy nginx.repo
+  copy:
+    src: nginx.repo
+    dest: /etc/yum.repos.d/nginx.repo
+ 
+- name: Install nginx
+  yum:
+    name: nginx
+    state: latest
+ 
+- name: Config nginx
+  copy:
+    src: myweb.conf
+    dest: /etc/nginx/conf.d/myweb.conf
+  notify: restart_nginx
+ 
+- name: Start nginx server
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: true
+ 
+#3、配置所有web服务挂载nfs
+- name: 安装nfs
+  yum:
+    name: nfs-utils
+    state: latest
+ 
+- name: 挂载
+  mount:
+    path: /usr/share/nginx/html
+    src: "{{ nfs_share_dir }}"
+    fstype: nfs
+    opts: defaults
+    state: mounted

@@ -1,0 +1,11 @@
+---
+# handlers file for web
+- name: restart_php
+  systemd:
+    name: php74-php-fpm
+    state: restarted
+ 
+- name: restart_nginx
+  systemd:
+    name: nginx
+    state: restarted

@@ -1,0 +1,20 @@
+---
+# tasks file for wordpress
+- name: mkdir /data
+  copy:
+    src: "latest.zip"
+    dest: "/data"
+ 
+- name: install unzip
+  yum:
+    name: unzip
+    state: present
+ 
+- name: 发布
+  shell: unzip /data/latest.zip -d /data
+ 
+- name: 渲染并传送配置
+  template:
+    src: "wp-config.php.j2"
+    dest: "/data/wordpress/wp-config.php"
+  

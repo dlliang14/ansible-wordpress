@@ -1,0 +1,22 @@
+---
+# tasks file for nfs
+- name: Install nfs-util
+  yum:
+    name: nfs*
+    state: present
+ 
+- name: mkdir /data
+  file:
+    path: "/data"
+    state: directory
+ 
+- name: Config nfs
+  copy:
+    content: '{{ nfs_txt }}'
+    dest: /etc/exports
+ 
+- name: Start nfs-server
+  systemd:
+    name: nfs-server
+    state: restarted
+    enabled: true

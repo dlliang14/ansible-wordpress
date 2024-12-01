@@ -1,0 +1,37 @@
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+include /usr/share/nginx/modules/*.conf;
+events {
+    worker_connections 1024;
+}
+http {
+    upstream webserver {
+      {% for host in groups['web_group'] %}
+      server '{{ host }}':8181;
+      {% endfor %}
+    }
+    server {
+        listen 443 ssl;
+        server_name '{{ wp.web_url }}' '{{ groups['lb'][0] }}';
+        ssl_certificate /etc/nginx/ssl_key/server.crt;
+        ssl_certificate_key /etc/nginx/ssl_key/server.key;
+ 
+        location / {
+            proxy_pass  http://webserver;
+           # 把真实的访问者ip发给后端web，后端web会据此来拼接静态文件的url地址以便让访问者浏览器发起二次请求
+           # 如果没有下面的这段内容，后端web会将静态资源的url地址拼成http://webserver/static/img/1.jpg的形式，导致访问者浏览器二次访问失败
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header Host $http_host;
+           proxy_next_upstream error timeout http_500 http_502 http_503 http_504 http_403 http_404;
+        }
+    }
+    server {
+        listen 80;
+        server_name '{{ wp.web_url }}' '{{ groups['lb'][0] }}';
+ 
+        rewrite (.*) https://$server_name$1;
+    }
+}

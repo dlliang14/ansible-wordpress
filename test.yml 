@@ -1,0 +1,24 @@
+---
+- name: 测试变量文件渲染
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: 输出 my_db 变量
+      debug:
+        var: my_db
+
+    - name: 输出 my_user 变量
+      debug:
+        var: my_user
+
+    - name: 输出 nfs_share_dir 变量
+      debug:
+        var: nfs_share_dir
+
+    - name: 输出 nfs_txt 变量
+      debug:
+        var: nfs_txt
+
+    - name: 输出 wp 变量
+      debug:
+        var: wp

@@ -1,0 +1,20 @@
+
+
+my_db:
+  name: wordpress
+  encoding: utf8mb4
+  db_collate: utf8mb4_unicode_ci
+
+my_user:
+  name: bob
+  host: "{{ hostvars['db1'].ansible_host }}"
+  password: 12345
+  priv: '*.*:ALL'
+
+nfs_share_dir: "{{ hostvars['nfs1'].ansible_host }}:/data"
+nfs_txt: '/data 10.0.0.0/24(rw,sync,all_squash)'
+
+wp:
+  table_prefix: wp_
+  wp_debug: false
+  web_url: www.dll.com

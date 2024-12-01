@@ -1,0 +1,30 @@
+- name: 优化部分
+  hosts: all
+  roles:
+    - base
+ 
+- name: 安装nfs
+  hosts: nfs_server
+  roles:
+    - nfs
+ 
+- name: 安装web
+  hosts: web_group
+  roles: 
+    - web
+ 
+- name: 安装数据库
+  hosts: db_server
+  roles:
+    - mysql
+ 
+- name: 配置负载均衡和高可用
+  hosts: lb
+  roles:
+    - lb
+    #- keepalived
+ 
+- name: 发布wordpress项目
+  hosts: nfs_server
+  roles:
+    - wordpress

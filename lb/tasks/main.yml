@@ -1,0 +1,41 @@
+---
+# tasks file for lb
+#1、安装nginx，配置nginx负载均衡
+- name: clear nginx
+  shell: >
+    yum remove nginx* -y ; rm -rf /etc/nginx /usr/share/nginx
+ 
+- name: copy nginx.repo
+  copy:
+    src: nginx.repo
+    dest: /etc/yum.repos.d/nginx.repo
+ 
+- name: Install nginx
+  yum:
+    name: nginx
+    state: latest
+ 
+- name: Create dir
+  file:
+    path: /etc/nginx/ssl_key
+    state: directory
+ 
+- name: copy multiple files
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'server.crt', dest: '/etc/nginx/ssl_key/server.crt'}
+    - { src: 'server.key', dest: '/etc/nginx/ssl_key/server.key'}
+  notify: restart_nginx
+
+- name: Render Nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/conf.d/nginx.conf
+ 
+- name: Start nginx server
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: true
