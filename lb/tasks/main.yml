@@ -32,7 +32,7 @@
 - name: Render Nginx configuration
   template:
     src: nginx.conf.j2
-    dest: /etc/nginx/conf.d/nginx.conf
+    dest: /etc/nginx/nginx.conf
  
 - name: Start nginx server
   systemd:

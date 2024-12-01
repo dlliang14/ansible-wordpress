@@ -21,58 +21,38 @@
     cmd: "python setup.py install"
     chdir: "/tmp/PyMySQL-0.8.1"
   
----
-- name: 安装 MySQL 5.7 社区版的 RPM 包
-  yum:
-    name: https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
-    state: present
+- name: clear mysql
+  shell: "yum remove mysql* -y"
+  ignore_errors: True
 
-- name: 安装 yum-utils
-  yum:
-    name: yum-utils
-    state: present
-
-- name: 禁用 MySQL 8.0 社区版 repo
-  command: yum-config-manager --disable mysql80-community
-
-- name: 启用 MySQL 5.7 社区版 repo
-  command: yum-config-manager --enable mysql57-community
-
-- name: 导入 MySQL GPG 密钥 默认的有问题
+- name: Import CentOS 7 GPG key
   rpm_key:
     state: present
-    key: https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+    key: http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 
-- name: 安装 MySQL 社区服务器
+# - name: Install mariadb
+#   yum:
+#     name: "mariadb*"
+#     state: latest
+
+- name: Install mariadb server
   yum:
-    name: mysql-community-server
-    state: present
+    name: mariadb-server
+    state: latest
 
-# - name: 查看 MySQL 版本
-#   command: mysql --version
-#   register: mysql_version
-#   ignore_errors: yes
-
-# - name: 打印 MySQL 版本
-#   debug:
-#     var: mysql_version.stdout_lines
-
-- name: init mysql
+- name: Install mariadb client
+  yum:
+    name: mariadb
+    state: latest
+ 
+- name: init maridb
   shell: "rm -rf /var/lib/mysql/*"
-
-- name: 修改my.cnf
-  template:
-    src: my.cnf.j2
-    dest: /etc/my.cnf
-    owner: root
-    group: root
-    mode: 0644
-
-- name: 启动 MySQL 服务
-  service:
-    name: mysqld
-    state: started
-    enabled: yes
+ 
+- name: Start mariadb
+  systemd:
+    name: mariadb
+    state: restarted
+    enabled: true
 
 - name: create database
   mysql_db:
@@ -83,12 +63,23 @@
     state: present
     encoding: "{{ my_db.encoding }}"
  
-- name: grant bob;
+# - name: grant bob;
+#   mysql_user:
+#     login_unix_socket: /var/lib/mysql/mysql.sock
+#     # 引用变量名必须加引号，否则报错
+#     name: "{{ my_user.name }}"
+#     host: "{{ my_user.host }}"
+#     password: "{{ my_user.password }}"
+#     priv: "{{ my_user.priv }}"
+#     state: present
+
+- name: Grant bob permissions to each host in web_group
   mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
-    # 引用变量名必须加引号，否则报错
     name: "{{ my_user.name }}"
-    host: "{{ my_user.host }}"
+    host: "{{ hostvars[item].ansible_host }}"
     password: "{{ my_user.password }}"
     priv: "{{ my_user.priv }}"
     state: present
+  loop: "{{ groups['web_group'] }}"
+  when: groups['web_group'] is defined

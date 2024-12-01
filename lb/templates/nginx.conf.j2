@@ -9,12 +9,12 @@ events {
 http {
     upstream webserver {
       {% for host in groups['web_group'] %}
-      server '{{ host }}':8181;
+      server {{ hostvars[host].ansible_host }}:8181;
       {% endfor %}
     }
     server {
         listen 443 ssl;
-        server_name '{{ wp.web_url }}' '{{ groups['lb'][0] }}';
+        server_name {{ wp.web_url }} {{ hostvars[groups['lb'][0]].ansible_host }};
         ssl_certificate /etc/nginx/ssl_key/server.crt;
         ssl_certificate_key /etc/nginx/ssl_key/server.key;
  
@@ -30,7 +30,7 @@ http {
     }
     server {
         listen 80;
-        server_name '{{ wp.web_url }}' '{{ groups['lb'][0] }}';
+        server_name {{ wp.web_url }} {{ hostvars[groups['lb'][0]].ansible_host }};
  
         rewrite (.*) https://$server_name$1;
     }

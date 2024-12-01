@@ -1,18 +1,29 @@
 ---
 # tasks file for wordpress
+- name: 检查 /data/latest.zip 是否存在
+  stat:
+    path: /data/latest.zip
+  register: latest_zip
+
 - name: mkdir /data
+  file:
+    path: /data
+    state: directory
+
+- name: 拷贝 latest.zip 到 /data
   copy:
     src: "latest.zip"
     dest: "/data"
- 
-- name: install unzip
+  when: not latest_zip.stat.exists
+
+- name: 安装 unzip
   yum:
     name: unzip
     state: present
- 
-- name: 发布
-  shell: unzip /data/latest.zip -d /data
- 
+
+- name: 解压 latest.zip 到 /data
+  shell: unzip -o /data/latest.zip -d /data
+
 - name: 渲染并传送配置
   template:
     src: "wp-config.php.j2"
